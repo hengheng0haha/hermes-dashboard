@@ -1,7 +1,7 @@
 {
   "generator-react-webpack": {
     "appName": "hermesDashboard",
-    "style": "scss",
+    "style": "css",
     "postcss": false
   }
 }

@@ -11,12 +11,15 @@ import React, {
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import Main from '../components/Main';
+import { render } from 'react-dom';
+
 /* Populated by react-webpack-redux:reducer */
 class App extends Component {
   render() {
     const {actions} = this.props;
     return <Main actions={actions}/>;
   }
+
 }
 /* Populated by react-webpack-redux:reducer
  *
@@ -37,4 +40,5 @@ function mapDispatchToProps(dispatch) {
   const actionMap = { actions: bindActionCreators(actions, dispatch) };
   return actionMap;
 }
+
 export default connect(mapStateToProps, mapDispatchToProps)(App);

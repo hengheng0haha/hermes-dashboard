@@ -9,6 +9,7 @@ import React from 'react';
 import Header from './Header.js'
 import Sidebar from './Sidebar.js'
 import Footer from './Footer.js'
+import {siderbar} from '../config/data'
 
 class AppComponent extends React.Component {
   render() {
@@ -16,25 +17,7 @@ class AppComponent extends React.Component {
       <div style={{height: '100%'}}>
         <Header/>
         <div className="am-cf admin-main">
-          <Sidebar items={[
-            {
-              label: '首页',
-              className: 'am-icon-home',
-              link: '/overview'
-            },
-            {
-              label: '订单',
-              className: 'am-icon-file',
-              id: 'order',
-              children: [
-                {
-                  label: '订单查询',
-                  link: '/query',
-                  className: 'am-icon-search'
-                }
-              ]
-            }
-          ]}/>
+          <Sidebar items={siderbar}/>
           <div className="admin-content">
             <div className="admin-content-body">
               <div id="container">

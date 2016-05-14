@@ -11,7 +11,6 @@ import React, {
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import Main from '../components/Main';
-import Overview from '../components/Overview'
 
 /* Populated by react-webpack-redux:reducer */
 class App extends Component {

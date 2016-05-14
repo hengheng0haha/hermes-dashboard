@@ -1,7 +1,9 @@
-import React from 'react';
+'use strict'
+
+import React, {Component} from 'react';
 import {Link} from 'react-router';
 
-class Sidebar extends React.Component {
+class Sidebar extends Component {
   render() {
     return (
       <div className="admin-sidebar" id="admin-offcanvas">
@@ -18,7 +20,7 @@ class Sidebar extends React.Component {
   }
 }
 
-class SidebarItem extends React.Component {
+class SidebarItem extends Component {
   render() {
     let childrenArr = [];
     let children;
@@ -37,7 +39,7 @@ class SidebarItem extends React.Component {
       )
     }
     let aProps = {
-      className: 'am-collapsed',
+      className: 'am-collapsed'
     }
     if (this.props.children) {
       Object.assign(aProps, {
@@ -46,8 +48,11 @@ class SidebarItem extends React.Component {
     }
     return (
       <li className={(this.props.children) ? 'admin-parent' : ''}>
-        <Link to={this.props.link || ""} {...aProps}><span className={this.props.className}></span>{this.props.label}</Link>
-
+        {
+          (this.props.children) ?
+            <a {...aProps}><span className={this.props.className}></span>{this.props.label}</a> :
+            <Link to={this.props.link || ''} {...aProps}><span className={this.props.className}></span>{this.props.label}</Link>
+        }
         {children}
       </li>
     )

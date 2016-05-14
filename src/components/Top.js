@@ -1,8 +1,8 @@
 'use strict'
 
-import React from 'react'
+import React, {Component} from 'react'
 
-class Top extends React.Component {
+class Top extends Component {
   render() {
     return (
       <div className="am-cf am-padding">

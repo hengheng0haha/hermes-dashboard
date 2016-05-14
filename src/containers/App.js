@@ -11,13 +11,13 @@ import React, {
 import { bindActionCreators } from 'redux';
 import { connect } from 'react-redux';
 import Main from '../components/Main';
-import { render } from 'react-dom';
+import Overview from '../components/Overview'
 
 /* Populated by react-webpack-redux:reducer */
 class App extends Component {
   render() {
     const {actions} = this.props;
-    return <Main actions={actions}/>;
+    return <Main actions={actions} container={this.props.container}/>;
   }
 
 }

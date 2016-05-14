@@ -26,10 +26,7 @@ class SidebarItem extends React.Component {
       childrenArr = this.props.children.map((item) => {
         return (
           <li>
-            <a style={{cursor: 'pointer'}}>
-              <span className={item.className}></span>
-              <Link to={item.link}>{item.label}</Link>
-            </a>
+            <Link to={item.link}><span className={item.className}></span>{item.label}</Link>
           </li>
         )
       })
@@ -39,12 +36,18 @@ class SidebarItem extends React.Component {
         </ul>
       )
     }
+    let aProps = {
+      className: 'am-collapsed',
+    }
+    if (this.props.children) {
+      Object.assign(aProps, {
+        'data-am-collapse': `{target: '#${this.props.id}'}`
+      })
+    }
     return (
       <li className={(this.props.children) ? 'admin-parent' : ''}>
-        <a className="am-collapsed" data-am-collapse={(this.props.children) ? `{target: '#${this.props.id}'}` : ''}>
-          <span className={this.props.className}></span>
-          <Link to={this.props.link}>{this.props.label}</Link>
-        </a>
+        <Link to={this.props.link || ""} {...aProps}><span className={this.props.className}></span>{this.props.label}</Link>
+
         {children}
       </li>
     )

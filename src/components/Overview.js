@@ -2,6 +2,7 @@
 
 import React, {Component} from 'react'
 import Top from './Top'
+import Graph from './Graph'
 
 class OrderOverview extends Component {
   render() {
@@ -19,6 +20,9 @@ class Overview extends Component {
       <div>
         <Top first="首页" second="服务概况"/>
         <OrderOverview/>
+        <div class="am-g">
+          <Graph />
+        </div>
       </div>
     )
   }

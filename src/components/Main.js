@@ -1,15 +1,9 @@
-require('styles/amazeui.css');
-require('styles/admin.css');
-require('normalize.css/normalize.css');
-require('styles/App.css');
-
-
 import React from 'react';
 
 import Header from './Header.js'
 import Sidebar from './Sidebar.js'
 import Footer from './Footer.js'
-import {siderbar} from '../config/data'
+import {siderbar} from '../data/init'
 
 class AppComponent extends React.Component {
   render() {

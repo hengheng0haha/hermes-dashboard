@@ -1,6 +1,17 @@
 import React, {Component} from 'react';
 import echarts from 'echarts'
 
+const core = {name: 'core', value: 0};
+
+const backend = [
+    {name: 'hehe1', value: 1},
+    {name: 'hehe2', value: 2},
+    {name: 'hehe3', value: 3},
+    {name: 'hehe4', value: 4},
+    {name: 'hehe5', value: 5},
+    {name: 'hehe6', value: 6}
+]
+
 class Graph extends Component {
     render() {
         return (
@@ -12,26 +23,35 @@ class Graph extends Component {
     
     componentDidMount() {
         const chart = echarts.init(document.getElementById('graph'))
-        let graph = {nodes: [], links: []}
-        
-        for (let i = 0;i < 10;i ++) {
-            graph.nodes.push({
+        let graph = {nodes: [{
                 category: 1,
                 draggable: true,
                 itemStyle: null,
-                name: `hehe${i}`,
-                symbolSize: 10,
-                value: 10,
-                x: null,
-                y: null
+                name: core.name,
+                symbolSize: 40,
+                value: core.value,
+                x: 300,
+                y: (backend.length + 1) * 25 / 2
+            }], links: []}
+        
+        backend.forEach((item, index) => {
+            graph.nodes.push({
+                category: 0,
+                draggable: true,
+                itemStyle: null,
+                name: item.name,
+                symbolSize: 20,
+                value: item.value,
+                x: 400,
+                y: (index + 1) * 25
             })
-        }
-        for(let i = 1;i < 10;i ++) {
             graph.links.push({
-                source: 'hehe0',
-                target: `hehe${i}`
+                source: 'core',
+                target: item.name
             })
-        }
+        })
+        
+        console.log(graph)
         
         chart.setOption({
         title: {
@@ -57,7 +77,8 @@ class Graph extends Component {
                     }
                 },
                 force: {
-                    repulsion: 100
+                    repulsion: 100,
+                    initLayout: 'none'
                 }
             }
         ]

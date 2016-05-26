@@ -46,4 +46,9 @@ let hermesHost = '172.16.10.20'
 let hermesPort = '8080'
 let hermesApi = `http://${hermesHost}:${hermesPort}/hermes/webapi`
 
-export {siderbar, hermesApi}
+let HEADERS_JSON = {
+  'Accept': 'application/json',
+  'Content-Type': 'application/json'
+};
+
+export {siderbar, hermesApi, HEADERS_JSON}

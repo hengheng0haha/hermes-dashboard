@@ -7,6 +7,7 @@
  * LICENSE.txt file in the root directory of this source tree.
  */
 
+require('date-utils');
 import 'babel-polyfill';
 import path from 'path';
 import express from 'express';
@@ -25,7 +26,6 @@ import routes from './routes';
 import assets from './assets'; // eslint-disable-line import/no-unresolved
 import {port, auth, analytics} from './config';
 import {getOrderChartByDate} from './core/utils';
-
 import {execute, solrQuery} from './core/cassandra';
 
 const app = express();
@@ -55,32 +55,79 @@ app.use('/graphql', expressGraphQL(req => ({
   pretty: process.env.NODE_ENV !== 'production',
 })));
 
-app.post('/order', async(req, res, next) => {
-  res.send("hello world")
+app.post('/orders', async(req, res, next) => {
+  let result = {};
+
+  try {
+
+    let query = solrQuery('orders').count(true);
+    let {startDate, endDate} = req.body.date;
+    if (startDate || endDate) {
+      let start = startDate ? `${startDate}T00:00:00Z` : '*';
+      let end = endDate ? `${endDate}T00:00:00Z` : '*';
+      query.q('create_date', `[${start} TO ${end}]`)
+    }
+    Object.keys(req.body.option).forEach((key) => {
+      let value = req.body.option[key];
+      if (value) {
+        if (key == 'text') {
+          query.fq(value.type, value.content)
+        } else if (key == 'sort') {
+          query.sort('create_date', value)
+        } else if (key == 'status' && value == 'error') {
+          query.fq('is_error', true)
+        } else {
+          query.fq(key, value)
+        }
+      }
+    });
+    let count;
+    count = (await execute(query.build())).rows[0].count;
+    console.log(count);
+
+    query.count(false)
+      .start((req.body.page - 1) * req.body.pageSize)
+      .limit(req.body.pageSize);
+    let orders = (await execute(query.build())).rows;
+    console.log(orders);
+
+    Object.assign(result, {count, orders});
+
+    console.log(req.body);
+  } catch (e) {
+    console.log(e);
+  }
+  res.send(JSON.stringify(result));
 });
 
-app.post('/chart', async(req, res, next) => {
+app.post('/orderCounter', async(req, res, next) => {
   let body = req.body;
-  console.log(req)
   let result = {};
   let today = await getOrderChartByDate(Date.today());
   Object.assign(result, today);
   if (body.init) {
-    for(let i = -1;i > -7;i --) {
+    for (let i = -1; i > -7; i--) {
       Object.assign(result, (await getOrderChartByDate(Date.today().add({days: i}))));
     }
+  } else if (body.prevDate && body.prevDate !== (new Date()).toYMD('-')) {
+    Object.assign(result, (await getOrderChartByDate(Date.today().add({days: -1}))));
   }
-  console.log(result)
+  console.log(result);
   res.send(JSON.stringify(result));
+});
+
+app.post('/listBackend', async(req, res, next) => {
+  let results = (await execute('select name from hermes.backends;')).rows;
+  console.log(results)
+  res.send(JSON.stringify(results));
 });
 
 
 //
 // Register server-side rendering middleware
 // -----------------------------------------------------------------------------
-app.get('/', async(req, res, next) => {
+app.get('*', async(req, res, next) => {
   try {
-    let css = [];
     let statusCode = 200;
     const template = require('./views/index.jade'); // eslint-disable-line global-require
     const data = {title: '', description: '', css: '', body: '', entry: assets.main.js};

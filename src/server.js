@@ -59,7 +59,6 @@ app.post('/orders', async(req, res, next) => {
   let result = {};
 
   try {
-
     let query = solrQuery('orders').count(true);
     let {startDate, endDate} = req.body.date;
     if (startDate || endDate) {
@@ -81,19 +80,15 @@ app.post('/orders', async(req, res, next) => {
         }
       }
     });
-    let count;
-    count = (await execute(query.build())).rows[0].count;
-    console.log(count);
+    let count = (await execute(query.build())).rows[0].count;
 
     query.count(false)
       .start((req.body.page - 1) * req.body.pageSize)
       .limit(req.body.pageSize);
     let orders = (await execute(query.build())).rows;
-    console.log(orders);
 
     Object.assign(result, {count, orders});
 
-    console.log(req.body);
   } catch (e) {
     console.log(e);
   }
@@ -103,22 +98,45 @@ app.post('/orders', async(req, res, next) => {
 app.post('/orderCounter', async(req, res, next) => {
   let body = req.body;
   let result = {};
-  let today = await getOrderChartByDate(Date.today());
+  let today = await getOrderChartByDate(Date.today(), body.param || {});
   Object.assign(result, today);
   if (body.init) {
     for (let i = -1; i > -7; i--) {
-      Object.assign(result, (await getOrderChartByDate(Date.today().add({days: i}))));
+      Object.assign(result, (await getOrderChartByDate(Date.today().add({days: i}), body.param || {})));
     }
   } else if (body.prevDate && body.prevDate !== (new Date()).toYMD('-')) {
-    Object.assign(result, (await getOrderChartByDate(Date.today().add({days: -1}))));
+    Object.assign(result, (await getOrderChartByDate(Date.today().add({days: -1}), body.param || {})));
   }
-  console.log(result);
   res.send(JSON.stringify(result));
 });
 
 app.post('/listBackend', async(req, res, next) => {
-  let results = (await execute('select name from hermes.backends;')).rows;
-  console.log(results)
+  let way = req.body.way;
+  let results = [];
+  if (way == 'solr') {
+    let start = Date.today().add({days: -7}).toFormat('YYYY-MM-DDTHH24:MI:SSZ'),
+      end = Date.today().add({days: 1}).toFormat('YYYY-MM-DDTHH24:MI:SSZ'),
+      query = solrQuery('orders')
+        .q('create_date', `[${start} TO ${end}]`)
+        .facet({
+          field: 'to_platform'
+        })
+        .build(),
+      result = (await execute(query)).rows[0].facet_fields;
+    let tmp = JSON.parse(result).to_platform;
+    console.log(tmp);
+    Object.keys(tmp).forEach((item) => {
+      if (tmp[item] != 0) {
+        results.push(item);
+      }
+    })
+  } else {
+    let json = (await execute('select name from hermes.backends;')).rows;
+    json.forEach((item) => {
+      results.push(item.name);
+    })
+  }
+  console.log(results);
   res.send(JSON.stringify(results));
 });
 

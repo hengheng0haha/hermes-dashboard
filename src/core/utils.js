@@ -3,18 +3,24 @@
  */
 require('date-utils');
 import {execute, solrQuery} from './cassandra';
+import {HEADERS_JSON} from '../data/init';
 
 const FORMAT = 'YYYY-MM-DDTHH24:MI:SSZ';
 
-let getOrderChartByDate = async(date) => {
+let getOrderChartByDate = async(date, params = {}) => {
   let query = solrQuery('orders')
     .q('create_date', `[${date.toFormat(FORMAT)} TO ${date.add({days: 1}).toFormat(FORMAT)}]`)
-    .facet({'field': 'status'})
-    .build();
+    .facet({'field': 'status'});
+
+  Object.keys(params).forEach((key) => {
+    query.fq(key, params[key]);
+  });
+
+  console.log(query.build());
   date.add({days: -1});
   let rst = {};
   try {
-    let result = await execute(query);
+    let result = await execute(query.build());
     let status = JSON.parse(result.rows[0].facet_fields).status;
     let total = (status.success || 0) + (status.underway || 0) + (status.failed || 0);
     let tmp = {
@@ -45,6 +51,22 @@ let getOrderChartByDate = async(date) => {
   }
 };
 
+let getAllBackend = async(params = {}) => {
+  let tmp = await fetch('/orderCounter', {
+    method: 'POST', headers: HEADERS_JSON, body: JSON.stringify(params)
+  });
+  return await tmp.json();
+};
+
+let getOrderCount = async(params = {}) => {
+  let tmp = await fetch('/orderCounter', {
+    method: 'POST', headers: HEADERS_JSON, body: JSON.stringify(params)
+  });
+  return await tmp.json();
+};
+
 export {
-  getOrderChartByDate
-}
+  getOrderChartByDate,
+  getAllBackend,
+  getOrderCount
+};

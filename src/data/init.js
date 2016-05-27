@@ -38,7 +38,14 @@ let siderbar = [
   {
     label: '运营商管理',
     className: 'am-icon-file',
-    link: '/backend'
+    id: 'backend',
+    children: [
+      {
+        label: '运营商订单概况',
+        link: '/backend_order_overview',
+        className: 'am-icon-file'
+      }
+    ]
   }
 ]
 
@@ -51,4 +58,14 @@ let HEADERS_JSON = {
   'Content-Type': 'application/json'
 };
 
-export {siderbar, hermesApi, HEADERS_JSON}
+let ACCOUNT_COLUMNS = [
+  'tb_order_id',
+  'inner_order_id',
+  'card_id',
+  'customer',
+  'create_date',
+  'finish_date',
+  'sum'
+];
+
+export {siderbar, hermesApi, HEADERS_JSON, ACCOUNT_COLUMNS}

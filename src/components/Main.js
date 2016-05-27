@@ -5,7 +5,7 @@ import Sidebar from './Sidebar.js'
 import Footer from './Footer.js'
 import {siderbar} from '../data/init'
 
-class AppComponent extends React.Component {
+class Main extends React.Component {
   render() {
     return (
       <div style={{height: '100%'}}>
@@ -26,9 +26,9 @@ class AppComponent extends React.Component {
   }
 }
 
-AppComponent.defaultProps = {
+Main.defaultProps = {
 };
 
 
 
-export default AppComponent;
+export default Main;

@@ -145,8 +145,8 @@ class OrderQuery extends Component {
         let backendNames = this.state.backend;
         json.forEach((item) => {
           backendNames.push({
-            value: item.name,
-            label: item.name
+            value: item,
+            label: item
           })
         });
         let state = Object.assign({}, this.state, {

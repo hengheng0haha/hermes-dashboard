@@ -13,6 +13,7 @@ import Overview from '../components/Overview';
 import OrderQuery from '../components/OrderQuery';
 import SupplierManage from '../components/SupplierManage';
 import BackendManage from '../components/Backend';
+import BackendOrderOverview from '../components/BackendOrderOverview';
 import {Router, Route, browserHistory, IndexRoute} from 'react-router';
 
 
@@ -28,17 +29,16 @@ export default {
 
   path: '/',
 
-  children: [
-  ],
+  children: [],
 
   async action({next, render, context}) {
     return render(
       <Router history={browserHistory}>
         <Route path="/" component={Dashboard}>
-          <IndexRoute component={{container: Overview}} />
-          <Route path="query" component={{container: OrderQuery}} />
-          <Route path="supplier" component={{container: SupplierManage}} />
-          <Route path="backend" component={{container: BackendManage}} />
+          <IndexRoute component={{container: Overview}}/>
+          <Route path="query" component={{container: OrderQuery}}/>
+          <Route path="supplier" component={{container: SupplierManage}}/>
+          <Route path="backend_order_overview" component={{container: BackendOrderOverview}}/>
         </Route>
       </Router>
     );

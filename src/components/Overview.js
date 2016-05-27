@@ -217,7 +217,6 @@ class Overview extends Component {
         this.refs.bar.setState(state);
         this.updateOrderCount();
       });
-
   }
 
   componentWillUnmount() {

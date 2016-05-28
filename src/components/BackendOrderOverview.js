@@ -55,8 +55,14 @@ class BackendOrderOverview extends Component {
     );
   }
 
-  async componentDidMount() {
+  componentDidMount() {
     this.initBackendList();
+  }
+
+  componentWillUnmount() {
+    if (this.orderCountInterval) {
+      clearInterval(this.orderCountInterval);
+    }
   }
 
   async initOrderOverview() {
@@ -162,6 +168,7 @@ class BackendOrderOverview extends Component {
 
   async initBackendList() {
     let json = await getAllBackend({way: 'solr'});
+    console.log(json);
     let backendNames = this.state.listBackend;
     json.forEach((item) => {
       backendNames.push({

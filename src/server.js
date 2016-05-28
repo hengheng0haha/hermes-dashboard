@@ -20,7 +20,9 @@ import schema from './data/schema';
 import assets from './assets'; // eslint-disable-line import/no-unresolved
 import {port} from './config';
 import {getOrderChartByDate} from './core/serverUtils';
+import {hermesApi, HEADERS_JSON} from './data/init';
 import {execute, solrQuery} from './core/cassandra';
+import fetch from 'node-fetch';
 
 const app = express();
 
@@ -134,6 +136,45 @@ app.post('/listBackend', async(req, res, next) => {
   res.send(JSON.stringify(results));
 });
 
+app.post('/listSuppliers', async(req, res) => {
+  let results = [];
+  let body = req.body;
+  let way = body.way || 'cql';
+  try {
+    if (way == 'cql') {
+      let suppliers = (await execute('select * from hermes.suppliers;')).rows;
+      suppliers.forEach((item) => {
+        results.push({
+          code: item.supplier_name,
+          name: item.memo,
+        })
+      })
+    } else if (way == 'hermes') {
+      let hBody = body.name ? {name: body.name} : {all: true};
+      console.log(hBody);
+      let tmp = (await fetch(`${hermesApi}/do/supplier/get_supplier`, {
+        method: 'POST',
+        body: JSON.stringify(hBody)
+      }));
+      let suppliers = JSON.parse((await tmp.json()).result.value);
+      console.log(suppliers);
+      results.push({
+        code: suppliers.supplier_name,
+        name: suppliers.memo,
+        balance: suppliers.balance,
+        cards: suppliers.price_map,
+        coopId: suppliers.coop_id
+      })
+    }
+  } catch (e) {
+    console.log(e);
+  }
+  res.send(JSON.stringify(results));
+});
+
+app.post('/supplier_charge', async(req, res) => {
+  
+})
 
 //
 // Register server-side rendering middleware

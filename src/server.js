@@ -13,19 +13,13 @@ import path from 'path';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
-import expressJwt from 'express-jwt';
 import expressGraphQL from 'express-graphql';
-import jwt from 'jsonwebtoken';
-import ReactDOM from 'react-dom/server';
-import {match} from 'universal-router';
 import PrettyError from 'pretty-error';
-import passport from './core/passport';
 import models from './data/models';
 import schema from './data/schema';
-import routes from './routes';
 import assets from './assets'; // eslint-disable-line import/no-unresolved
-import {port, auth, analytics} from './config';
-import {getOrderChartByDate} from './core/utils';
+import {port} from './config';
+import {getOrderChartByDate} from './core/serverUtils';
 import {execute, solrQuery} from './core/cassandra';
 
 const app = express();

@@ -2,9 +2,7 @@
 
 import crypto from 'crypto';
 import fetch from 'node-fetch';
-
-const hermesHost = '172.16.10.20';
-const hermesApi = `http://${hermesHost}:8080/hermes/webapi`;
+import {hermesApi} from '../data/init';
 
 
 const SupplierFactory = (name, plugin, memo, balance) => {

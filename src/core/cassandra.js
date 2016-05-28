@@ -4,7 +4,7 @@
 
 'use strict';
 
-const driver = require('cassandra-driver');
+import * as driver from 'cassandra-driver';
 
 const _nodes = ['172.16.10.20'];
 const _user = "";

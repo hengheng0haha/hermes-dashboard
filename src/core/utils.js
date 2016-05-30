@@ -25,6 +25,14 @@ let getSuppliers = async(params = {}) => {
   return await tmp.json();
 };
 
+let supplierCharge = async(supplier, sum) => {
+  let body = {supplier, sum};
+  let tmp = await fetch('/supplier_charge', {
+    method: 'POST', headers: HEADERS_JSON, body: JSON.stringify(body)
+  });
+  return await tmp.json();
+};
+
 let transformMoney = (s) => {
   if (s == '-1')  return "∞";
   if (/[^0-9\.]/.test(s)) return "invalid value";
@@ -47,4 +55,5 @@ export {
   getOrderCount,
   getSuppliers,
   transformMoney,
+  supplierCharge
 };

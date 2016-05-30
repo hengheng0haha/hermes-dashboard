@@ -11,9 +11,8 @@ import React from 'react';
 import Main from '../components/Main';
 import Overview from '../components/Overview';
 import OrderQuery from '../components/OrderQuery';
-import SupplierManage from '../components/SupplierManage';
-import SupplierBilling from '../components/SupplierBilling';
-import BackendOrderOverview from '../components/BackendOrderOverview';
+import {SupplierBilling, SupplierManage, SupplierProducts} from '../components/supplier';
+import {BackendOrderOverview} from '../components/backend';
 import {Router, Route, browserHistory, IndexRoute} from 'react-router';
 
 
@@ -39,6 +38,7 @@ export default {
           <Route path="query" component={{container: OrderQuery}}/>
           <Route path="supplier" component={{container: SupplierManage}}/>
           <Route path="supplier_billing" component={{container: SupplierBilling}}/>
+          <Route path="supplier_product" component={{container: SupplierProducts}}/>
           <Route path="backend_order_overview" component={{container: BackendOrderOverview}}/>
         </Route>
       </Router>

@@ -13,10 +13,7 @@ import path from 'path';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import bodyParser from 'body-parser';
-import expressGraphQL from 'express-graphql';
 import PrettyError from 'pretty-error';
-import models from './data/models';
-import schema from './data/schema';
 import assets from './assets'; // eslint-disable-line import/no-unresolved
 import {port} from './config';
 import {getOrderChartByDate} from './core/serverUtils';
@@ -41,15 +38,6 @@ app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
 app.use(bodyParser.json());
 
-//
-// Register API middleware
-// -----------------------------------------------------------------------------
-app.use('/graphql', expressGraphQL(req => ({
-  schema,
-  graphiql: true,
-  rootValue: {request: req},
-  pretty: process.env.NODE_ENV !== 'production',
-})));
 
 app.post('/orders', async(req, res, next) => {
   let result = {};
@@ -151,13 +139,11 @@ app.post('/listSuppliers', async(req, res) => {
       })
     } else if (way == 'hermes') {
       let hBody = body.name ? {name: body.name} : {all: true};
-      console.log(hBody);
       let tmp = (await fetch(`${hermesApi}/do/supplier/get_supplier`, {
         method: 'POST',
         body: JSON.stringify(hBody)
       }));
       let suppliers = JSON.parse((await tmp.json()).result.value);
-      console.log(suppliers);
       results.push({
         code: suppliers.supplier_name,
         name: suppliers.memo,
@@ -173,8 +159,20 @@ app.post('/listSuppliers', async(req, res) => {
 });
 
 app.post('/supplier_charge', async(req, res) => {
-  
-})
+  let {supplier, sum} = req.body;
+  let tmp = (await fetch(`${hermesApi}/do/supplier/supplier_charge`, {
+    method: 'POST',
+    body: JSON.stringify({name: supplier, sum})
+  }));
+  let resp;
+  try {
+    let result = await tmp.json();
+    resp = JSON.parse(result.result.value);
+  } catch (e) {
+    console.log(e);
+  }
+  res.send(resp || JSON.stringify({code: 1}));
+});
 
 //
 // Register server-side rendering middleware
@@ -213,9 +211,7 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
 // Launch the server
 // -----------------------------------------------------------------------------
 /* eslint-disable no-console */
-models.sync().catch(err => console.error(err.stack)).then(() => {
-  app.listen(port, () => {
-    console.log(`The server is running at http://localhost:${port}/`);
-  });
+app.listen(port, () => {
+  console.log(`The server is running at http://localhost:${port}/`);
 });
 /* eslint-enable no-console */

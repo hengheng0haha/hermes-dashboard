@@ -29,6 +29,11 @@ let siderbar = [
         className: 'am-icon-file'
       },
       {
+        label: '商家产品',
+        link: '/supplier_product',
+        className: 'am-icon-file'
+      },
+      {
         label: '商家计费',
         link: '/supplier_billing',
         className: 'am-icon-file'

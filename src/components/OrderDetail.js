@@ -60,7 +60,7 @@ class OrderDetail extends Component {
       <div className="am-offcanvas-bar am-offcanvas-bar-flip"
            style={this.props.style}>
         <div className="am-offcanvas-content" style={{marginTop: '20%'}}>
-          <div className="am-container">
+          <ul className="am-list am-list-static am-list-border ">
             {Object.keys(DetailKeyMapping).map((col) => {
               if (col === 'solr_query')
                 return '';
@@ -68,45 +68,47 @@ class OrderDetail extends Component {
               console.log(col, value);
               if (typeof value != 'boolean' && !value) {
                 return (
-                  <div className="am-u-sm-12" style={{marginBottom: '5%'}}>
+                  <li style={{marginBottom: '5%'}}>
                     <h2>{DetailKeyMapping[col]}</h2>
-                    <p>{'无'}</p>
-                  </div>
+                    <textarea style={{width: '100%'}} rows="5" value='无' disabled/>
+                  </li>
                 )
               } else {
                 if (col == 'message') {
                   let subMessage = DetailKeyMapping.message.children;
                   return (
-                    <div className="am-u-sm-12" style={{marginBottom: '5%'}}>
+                    <li style={{marginBottom: '5%'}}>
                       <h2>{DetailKeyMapping.message.title}</h2>
-                      {Object.keys(subMessage).map((item) => {
-                        return (
-                          <div>
-                            <strong>{subMessage[item]}</strong>
-                            <p>{value[item]}</p>
-                          </div>
-                        );
-                      })}
-                    </div>
+                      <ul className="am-list am-list-static am-list-border">
+                        {Object.keys(subMessage).map((item) => {
+                          return (
+                            <li style={{marginBottom: '5%'}}>
+                              <h3>{subMessage[item]}</h3>
+                              <textarea style={{width: '100%'}} rows="5" value={value[item]} disabled/>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    </li>
                   )
                 } else if (col.endsWith('date')) {
                   return (
-                    <div className="am-u-sm-12" style={{marginBottom: '5%'}}>
+                    <li style={{marginBottom: '5%'}}>
                       <h2>{DetailKeyMapping[col]}</h2>
-                      <p>{new Date(value).toFormat('YYYY-MM-DD HH24:MI:SS')}</p>
-                    </div>
+                      <textarea style={{width: '100%'}} rows="5" value={new Date(value).toFormat('YYYY-MM-DD HH24:MI:SS')} disabled/>
+                    </li>
                   )
                 } else {
                   return (
-                    <div className="am-u-sm-12" style={{marginBottom: '5%'}}>
+                    <li style={{marginBottom: '5%'}}>
                       <h2>{DetailKeyMapping[col]}</h2>
-                      <p>{value.toString()}</p>
-                    </div>
+                      <textarea style={{width: '100%'}} rows="5" value={value.toString()} disabled/>
+                    </li>
                   )
                 }
               }
             })}
-          </div>
+          </ul>
         </div>
       </div>
     )

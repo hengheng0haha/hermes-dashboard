@@ -23,7 +23,7 @@ const SupplierFactory = (name, plugin, memo, balance) => {
 
 /**
  * @param supplier supplier名称
- * @param prices   {{card_id: {price, percent}}}
+ * @param prices
  *           card_id: 产品编号
  *           price:   给商家的产品价格
  *           percent: 给商家的折扣

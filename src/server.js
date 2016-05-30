@@ -174,6 +174,37 @@ app.post('/supplier_charge', async(req, res) => {
   res.send(resp || JSON.stringify({code: 1}));
 });
 
+app.post('/listCards', async(req, res) => {
+  let rst = {};
+  let {supplier} = req.body;
+  try {
+    let tmp = await fetch(`${hermesApi}/do/supplier/get_supplier`, {
+      method: 'POST',
+      body: JSON.stringify({name: supplier})
+    });
+
+    let _supplier = (await tmp.json());
+    console.log(_supplier);
+    if (_supplier.code == '0') {
+      rst = JSON.parse(_supplier.result.value).priceMap;
+      let totalCards = (await execute('select card_id, memo, type from hermes.card_mapping;')).rows;
+      console.log(totalCards);
+      totalCards.forEach((card) => {
+        let code = card.card_id;
+        if (rst[code]) {
+          Object.assign(rst[code], {code, name: card.memo, type: card.type});
+        }
+      });
+      console.log(rst);
+      res.send(JSON.stringify(rst));
+    }
+  } catch (e) {
+    console.log(e);
+  }
+  res.send({code: 1});
+
+});
+
 //
 // Register server-side rendering middleware
 // -----------------------------------------------------------------------------

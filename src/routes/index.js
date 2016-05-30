@@ -10,7 +10,7 @@
 import React from 'react';
 import Main from '../components/Main';
 import Overview from '../components/Overview';
-import OrderQuery from '../components/OrderQuery';
+import {OrderQuery} from '../components/order';
 import {SupplierBilling, SupplierManage, SupplierProducts} from '../components/supplier';
 import {BackendOrderOverview} from '../components/backend';
 import {Router, Route, browserHistory, IndexRoute} from 'react-router';

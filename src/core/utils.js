@@ -33,6 +33,13 @@ let supplierCharge = async(supplier, sum) => {
   return await tmp.json();
 };
 
+let getCards = async(supplier) => {
+  let tmp = await fetch('/listCards', {
+    method: 'POST', headers: HEADERS_JSON, body: JSON.stringify({supplier})
+  });
+  return await tmp.json();
+};
+
 let transformMoney = (s) => {
   if (s == '-1')  return "∞";
   if (/[^0-9\.]/.test(s)) return "invalid value";
@@ -55,5 +62,6 @@ export {
   getOrderCount,
   getSuppliers,
   transformMoney,
-  supplierCharge
+  supplierCharge,
+  getCards
 };

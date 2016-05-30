@@ -86,7 +86,7 @@ class TableRow extends React.Component {
       <tr>
         {this.props.show.map((item) => {
           let cell = new Date(data[item]);
-          if (cell == 'Invalid Date') {
+          if (typeof data[item] == 'number' || cell == 'Invalid Date') {
             cell = data[item];
           } else {
             cell = cell.toFormat('YYYY-MM-DD HH24:MI:SS');

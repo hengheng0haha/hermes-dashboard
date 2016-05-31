@@ -8,7 +8,7 @@ class Table extends Component {
   static propTypes = {
     names: React.PropTypes.array,
     onFirstPage: React.PropTypes.func,
-    onPrePage: React.PropTypes.func,
+    onPrevPage: React.PropTypes.func,
     onNextPage: React.PropTypes.func,
     onLastPage: React.PropTypes.func,
     pageSize: React.PropTypes.number,

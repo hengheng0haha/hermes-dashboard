@@ -6,10 +6,10 @@
 
 import * as driver from 'cassandra-driver';
 
-// const _nodes = ['172.16.10.20'];
-const _nodes = ['172.16.10.40'];
-const _user = "cassandra";
-const _password = "cassandra";
+const _nodes = ['172.16.10.20'];
+// const _nodes = ['172.16.10.40'];
+const _user = "";
+const _password = "";
 const _keyspace = "hermes";
 
 const authProvider = (_user === "" || _password === "") ? undefined : new driver.auth.PlainTextAuthProvider(_user, _password);

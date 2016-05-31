@@ -123,12 +123,7 @@ class Overview extends Component {
           }
         ]}/>
         <div className="am-g">
-          <div className="am-u-md-6">
-            <ChartContainer title="测试">
-              <Graph />
-            </ChartContainer>
-          </div>
-          <div className="am-u-md-6">
+          <div className="am-u-md-12">
             <ChartContainer title="订单概况直方图">
               <Bar
                 ref="bar"

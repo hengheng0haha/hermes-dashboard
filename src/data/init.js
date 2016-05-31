@@ -1,4 +1,6 @@
-'use strict'
+'use strict';
+
+import {hermes} from './dashboard.config.js';
 
 let siderbar = [
   {
@@ -52,11 +54,10 @@ let siderbar = [
       }
     ]
   }
-]
+];
 
-let hermesHost = '172.16.10.20'
-let hermesPort = '8080'
-let hermesApi = `http://${hermesHost}:${hermesPort}/hermes/webapi`
+
+let hermesApi = `http://${hermes.host}:${hermes.port}/hermes/webapi`;
 
 let HEADERS_JSON = {
   'Accept': 'application/json',

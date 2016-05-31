@@ -5,17 +5,14 @@
 'use strict';
 
 import * as driver from 'cassandra-driver';
+import {cassandra} from '../data/dashboard.config.js';
 
-const _nodes = ['172.16.10.20'];
-// const _nodes = ['172.16.10.40'];
-const _user = "";
-const _password = "";
 const _keyspace = "hermes";
 
-const authProvider = (_user === "" || _password === "") ? undefined : new driver.auth.PlainTextAuthProvider(_user, _password);
+const authProvider = (cassandra.user === "" || cassandra.user === "") ? undefined : new driver.auth.PlainTextAuthProvider(cassandra.user, cassandra.password);
 
 const client = new driver.Client({
-  contactPoints: _nodes,
+  contactPoints: cassandra.nodes,
   authProvider,
 });
 
@@ -130,8 +127,7 @@ class SolrBuilder {
   }
 
   build() {
-    let query = `SELECT ${this._count ? 'count(*)' : '*'} FROM ${this.keyspace}.${this.table} WHERE solr_query='${JSON.stringify(this._result)}' ${(this._result['facet'] === undefined && !this._count) ? ('LIMIT ' + this._limit) : ''};`;
-    return query;
+    return `SELECT ${this._count ? 'count(*)' : '*'} FROM ${this.keyspace}.${this.table} WHERE solr_query='${JSON.stringify(this._result)}' ${(this._result['facet'] === undefined && !this._count) ? ('LIMIT ' + this._limit) : ''};`;
   }
 
 }

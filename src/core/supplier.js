@@ -4,7 +4,6 @@ import crypto from 'crypto';
 import fetch from 'node-fetch';
 import {hermesApi} from '../data/init';
 
-
 const SupplierFactory = (name, plugin, memo, balance) => {
   let time = new Date().getTime();
   let coopId = String(Math.abs(time >> Math.random()));
@@ -17,7 +16,6 @@ const SupplierFactory = (name, plugin, memo, balance) => {
     balance,
     key
   };
-  console.log(body);
   return fetch(`${hermesApi}/do/supplier/add_supplier`, {method: 'POST', body: JSON.stringify(body)});
 };
 
@@ -40,7 +38,6 @@ const SupplierPriceFactory = (supplier, prices) => {
     body.prices.push(prices[card].price);
     body.percents.push(prices[card].percent || '1');
   });
-  console.log(body);
   return fetch(`${hermesApi}/do/supplier/add_price`, {method: 'POST', body: JSON.stringify(body)});
 };
 

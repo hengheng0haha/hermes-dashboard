@@ -16,7 +16,7 @@ import bodyParser from 'body-parser';
 import PrettyError from 'pretty-error';
 import assets from './assets'; // eslint-disable-line import/no-unresolved
 import {port} from './config';
-import {getOrderChartByDate} from './core/serverUtils';
+import {getOrderChartByDate, getDateRange} from './core/serverUtils';
 import {hermesApi, HEADERS_JSON} from './data/init';
 import {execute, solrQuery} from './core/cassandra';
 import fetch from 'node-fetch';
@@ -82,14 +82,18 @@ app.post('/orders', async(req, res, next) => {
 app.post('/orderCounter', async(req, res, next) => {
   let body = req.body;
   let result = {};
-  let today = await getOrderChartByDate(Date.today(), body.param || {});
-  Object.assign(result, today);
-  if (body.init) {
-    for (let i = -1; i > -7; i--) {
-      Object.assign(result, (await getOrderChartByDate(Date.today().add({days: i}), body.param || {})));
+  try {
+    let today = await getOrderChartByDate(Date.today(), body.param || {});
+    Object.assign(result, today);
+    if (body.init) {
+      for (let i = -1; i > -7; i--) {
+        Object.assign(result, (await getOrderChartByDate(Date.today().add({days: i}), body.param || {})));
+      }
+    } else if (body.prevDate && body.prevDate !== (new Date()).toYMD('-')) {
+      Object.assign(result, (await getOrderChartByDate(Date.today().add({days: -1}), body.param || {})));
     }
-  } else if (body.prevDate && body.prevDate !== (new Date()).toYMD('-')) {
-    Object.assign(result, (await getOrderChartByDate(Date.today().add({days: -1}), body.param || {})));
+  } catch (e) {
+    console.log(e);
   }
   res.send(JSON.stringify(result));
 });
@@ -97,30 +101,30 @@ app.post('/orderCounter', async(req, res, next) => {
 app.post('/listBackend', async(req, res, next) => {
   let way = req.body.way;
   let results = [];
-  if (way == 'solr') {
-    let start = Date.today().add({days: -7}).toFormat('YYYY-MM-DDTHH24:MI:SSZ'),
-      end = Date.today().add({days: 1}).toFormat('YYYY-MM-DDTHH24:MI:SSZ'),
-      query = solrQuery('orders')
-        .q('create_date', `[${start} TO ${end}]`)
-        .facet({
-          field: 'to_platform'
-        })
-        .build(),
-      result = (await execute(query)).rows[0].facet_fields;
-    let tmp = JSON.parse(result).to_platform;
-    console.log(tmp);
-    Object.keys(tmp).forEach((item) => {
-      if (tmp[item] != 0) {
-        results.push(item);
-      }
-    })
-  } else {
-    let json = (await execute('select name from hermes.backends;')).rows;
-    json.forEach((item) => {
-      results.push(item.name);
-    })
+  try {
+    if (way == 'solr') {
+      let query = solrQuery('orders')
+          .q('create_date', getDateRange(Date.today().add({days: -7}), Date.today()))
+          .facet({
+            field: 'to_platform'
+          })
+          .build(),
+        result = (await execute(query)).rows[0].facet_fields;
+      let tmp = JSON.parse(result).to_platform;
+      Object.keys(tmp).forEach((item) => {
+        if (tmp[item] != 0) {
+          results.push(item);
+        }
+      })
+    } else {
+      let json = (await execute('select name from hermes.backends;')).rows;
+      json.forEach((item) => {
+        results.push(item.name);
+      })
+    }
+  } catch (e) {
+    console.log(e);
   }
-  console.log(results);
   res.send(JSON.stringify(results));
 });
 
@@ -160,12 +164,12 @@ app.post('/listSuppliers', async(req, res) => {
 
 app.post('/supplier_charge', async(req, res) => {
   let {supplier, sum} = req.body;
-  let tmp = (await fetch(`${hermesApi}/do/supplier/supplier_charge`, {
-    method: 'POST',
-    body: JSON.stringify({name: supplier, sum})
-  }));
   let resp;
   try {
+    let tmp = (await fetch(`${hermesApi}/do/supplier/supplier_charge`, {
+      method: 'POST',
+      body: JSON.stringify({name: supplier, sum})
+    }));
     let result = await tmp.json();
     resp = JSON.parse(result.result.value);
   } catch (e) {
@@ -184,18 +188,15 @@ app.post('/listCards', async(req, res) => {
     });
 
     let _supplier = (await tmp.json());
-    console.log(_supplier);
     if (_supplier.code == '0') {
       rst = JSON.parse(_supplier.result.value).priceMap;
       let totalCards = (await execute('select card_id, memo, type from hermes.card_mapping;')).rows;
-      console.log(totalCards);
       totalCards.forEach((card) => {
         let code = card.card_id;
         if (rst[code]) {
           Object.assign(rst[code], {code, name: card.memo, type: card.type});
         }
       });
-      console.log(rst);
       res.send(JSON.stringify(rst));
     }
   } catch (e) {

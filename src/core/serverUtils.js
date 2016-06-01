@@ -1,20 +1,18 @@
 /**
  * Created by Baxter on 2016/5/28.
  */
+require('date-utils');
 import {execute, solrQuery} from './cassandra';
 const FORMAT = 'YYYY-MM-DDTHH24:MI:SSZ';
 
 let getOrderChartByDate = async(date, params = {}) => {
   let query = solrQuery('orders')
-    .q('create_date', `[${date.toFormat(FORMAT)} TO ${date.add({days: 1}).toFormat(FORMAT)}]`)
+    .q('create_date', getDateRange(date))
     .facet({'field': 'status'});
 
   Object.keys(params).forEach((key) => {
     query.fq(key, params[key]);
   });
-
-  console.log(query.build());
-  date.add({days: -1});
   let rst = {};
   try {
     let result = await execute(query.build());
@@ -31,23 +29,38 @@ let getOrderChartByDate = async(date, params = {}) => {
       rst[date.toYMD('-')] = tmp;
     } else {
       let errorQuery = solrQuery('orders')
-        .q('create_date', `[${date.toFormat(FORMAT)} TO ${date.add({days: 1}).toFormat(FORMAT)}]`)
+        .q('create_date', getDateRange(date))
         .fq('is_error', true)
-        .count(true)
-        .build();
-      date.add({days: -1});
-      let error = (await execute(errorQuery)).rows[0].count;
+        .count(true);
+      Object.keys(params).forEach((key) => {
+        errorQuery.fq(key, params[key]);
+      });
+      let error = (await execute(errorQuery.build())).rows[0].count;
       tmp['failed'] = status.failed - error;
       tmp['error'] = error;
       rst[date.toYMD('-')] = tmp;
     }
     return rst;
-
   } catch (e) {
     console.log(e)
   }
 };
 
+let getDateRange = (date, end) => {
+  let rst;
+  if (!end) {
+    rst = `[${date.addHours(-8).toFormat(FORMAT)} TO ${date.add({days: 1}).toFormat(FORMAT)}]`;
+  } else {
+    date.addHours(24);
+    end.addHours(24);
+    rst = `[${date.addHours(-8).toFormat(FORMAT)} TO ${end.addHours(-8).toFormat(FORMAT)}]`;
+    end.addHours(-16);
+  }
+  date.addHours(-16);
+  return rst;
+};
+
 export {
-  getOrderChartByDate
+  getOrderChartByDate,
+  getDateRange
 };

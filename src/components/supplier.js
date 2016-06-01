@@ -4,6 +4,7 @@
 'use strict';
 
 import React, {Component} from 'react';
+import ReactDOM from 'react-dom';
 import Top from './Top';
 import Panel from './Panel';
 import {Selected, ModalTrigger, Modal} from 'amazeui-react';
@@ -52,13 +53,25 @@ class SupplierProducts extends Component {
       <div className="am-u-sm-12">
         <Top first="商家" second="商家产品"/>
         <Panel title="选择一个商家">
-          <Selected
-            ref="supplier"
-            placeholder="选择一个商家"
-            data={this.state.suppliers}
-            value={this.state.selectedSupplier}
-            onChange={(value) => this.handleSupplierSelected(value)}
-          />
+          <div className="am-u-sm-12 am-u-md-3">
+            <Selected
+              ref="supplier"
+              placeholder="选择一个商家"
+              data={this.state.suppliers}
+              value={this.state.selectedSupplier}
+              onChange={(value) => this.handleSupplierSelected(value)}
+            />
+          </div>
+          <div className="am-u-sm-12 am-u-md-3 am-u-end">
+            <div className="am-form-group am-form-file">
+              <button type="button" className="am-btn am-btn-danger am-btn-sm"
+                      disabled={this.state.selectedSupplier ? '': 'disabled'}>
+                <i className="am-icon-cloud-upload"></i> 选择产品列表文件
+              </button>
+              <input id="doc-form-file" type="file" multiple disabled={this.state.selectedSupplier ? '': 'disabled'}/>
+            </div>
+            <div id="file-list"></div>
+          </div>
         </Panel>
         <Table
           names={{
@@ -82,6 +95,23 @@ class SupplierProducts extends Component {
 
   componentDidMount() {
     this.initSuppliers();
+    $('#doc-form-file').on('change', function() {
+      console.log('change');
+      console.log(this.files);
+      var fileNames = '';
+      $.each(this.files, function() {
+        fileNames += `<span class="am-badge">${this.name}</span>`;
+      });
+      $('#file-list').html(fileNames);
+    });
+  }
+
+  onModalCancel() {
+    console.log('cancel');
+  }
+
+  conModalConfirm(value) {
+    console.log('confirm', value);
   }
 
   async initSuppliers() {
@@ -145,7 +175,8 @@ class SupplierProducts extends Component {
 
   }
 
-  handleLastPage() {}
+  handleLastPage() {
+  }
 }
 
 class SupplierBilling extends Component {

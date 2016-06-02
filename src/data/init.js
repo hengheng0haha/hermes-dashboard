@@ -26,35 +26,8 @@ let siderbar = [
     id: 'supplier',
     children: [
       {
-        label: '商家管理',
-        link: '/supplier',
-        className: 'am-icon-file'
-      },
-      {
         label: '商家产品',
         link: '/supplier_product',
-        className: 'am-icon-file'
-      },
-      {
-        label: '商家计费',
-        link: '/supplier_billing',
-        className: 'am-icon-file'
-      }
-    ]
-  },
-  {
-    label: '运营商管理',
-    className: 'am-icon-file',
-    id: 'backend',
-    children: [
-      {
-        label: '运营商订单概况',
-        link: '/backend_order_overview',
-        className: 'am-icon-file'
-      },
-      {
-        label: '运营商月交易额',
-        link: '/backend_billing_month',
         className: 'am-icon-file'
       }
     ]

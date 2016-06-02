@@ -34,13 +34,9 @@ export default {
     return render(
       <Router history={browserHistory}>
         <Route path="/" component={Dashboard}>
-          <IndexRoute component={{container: Overview}}/>
+          <IndexRoute component={{container: SupplierBilling}}/>
           <Route path="query" component={{container: OrderQuery}}/>
-          <Route path="supplier" component={{container: SupplierManage}}/>
-          <Route path="supplier_billing" component={{container: SupplierBilling}}/>
           <Route path="supplier_product" component={{container: SupplierProducts}}/>
-          <Route path="backend_order_overview" component={{container: BackendOrderOverview}}/>
-          <Route path="backend_billing_month" component={{container: BackendBillingCount}}/>
         </Route>
       </Router>
     );

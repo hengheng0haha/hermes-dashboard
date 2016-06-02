@@ -2,7 +2,8 @@
  * Created by Baxter on 2016/5/31.
  */
 
-const DEBUG = true;
+const DEBUG = false;
+const SUPPLIER = 'npn';
 
 const hermes = {
   host: DEBUG ? '172.16.10.20' : '172.16.10.30',
@@ -15,4 +16,4 @@ const cassandra = {
   password: DEBUG ? '' : 'cassandra'
 };
 
-export {hermes, cassandra};
+export {hermes, cassandra, SUPPLIER};

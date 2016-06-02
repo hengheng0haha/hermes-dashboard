@@ -1,4 +1,4 @@
-'use strict'
+'use strict';
 
 require('date-utils');
 
@@ -6,9 +6,11 @@ import fetch from 'node-fetch';
 import fs from 'fs';
 import {solrQuery, execute} from './cassandra';
 import {hermesApi, ACCOUNT_COLUMNS} from '../data/init';
+import {getDateRange, getCardsPriceBySupplier} from '../core/serverUtils';
+import {types} from 'cassandra-driver';
 
 const pageSize = 300;
-const outPath = 'E:\\'
+const outPath = 'E:\\';
 
 /**
  * 为所有商家生成一个时间范围内的对账文件
@@ -22,7 +24,7 @@ let generate = async(dateStart, dateEnd) => {
   return await Promise.all(suppliers.map((supplier) => {
     return generateAccountBySupplier(supplier, dateStart, dateEnd)
   }));
-}
+};
 
 /**
  * 为某一个商家生成一个时间范围内的一个对账文件
@@ -32,44 +34,48 @@ let generate = async(dateStart, dateEnd) => {
  * @param dateEnd[Date]    结束时间
  */
 let generateAccountBySupplier = async(supplier, dateStart, dateEnd) => {
-  let startDateStr = `${dateStart.toYMD('-')}T00:00:00Z`,
-    endDateStr = `${dateEnd.addHours(24).toYMD('-')}T00:00:00Z`;
-  let rows = [],
-    count,
-    countSum = 0;
   try {
-    count = (await getCount(supplier.coopId, startDateStr, endDateStr)).rows[0].count;
+    let CARDS = await getCardsPriceBySupplier(supplier.supplierName);
+    let dateRange = getDateRange(dateStart, dateEnd);
+    let rows = [],
+      count,
+      countCardSum = types.BigDecimal.fromNumber(0);
+    count = (await getCount(supplier.coopId, dateRange)).rows[0].count;
+    let pageCount = Math.ceil(count / pageSize);
+    for (let i = 0; i < pageCount; i++) {
+      let builder = solrQuery('orders');
+      let query = builder
+        .q('create_date', dateRange)
+        .fq('coop_id', supplier.coopId)
+        .fq('status', 'SUCCESS')
+        .start(i * pageSize)
+        .limit(pageSize)
+        .build();
+      let orderRows = (await execute(query)).rows;
+      orderRows.forEach((row) => {
+        let cardPrice = String(CARDS[row.card_id]);
+        countCardSum = countCardSum.add(types.BigDecimal.fromString(cardPrice));
+
+        let tmp = getAccountRow(row);
+        tmp.push(cardPrice);
+        rows.push(tmp.join('|'));
+      })
+    }
+    rows.unshift(`${count}|${countCardSum}`);
+
+    let fileName = `${outPath}\\${supplier.coopId}_${dateStart.toFormat('YYYYMMDD')}.txt`;
+    console.log('save', fileName);
+    let file = fs.createWriteStream(fileName, {defaultEncoding: 'utf8'});
+    let success = file.write(rows.join('\n'));
+    file.close();
+    return {
+      success,
+      fileName
+    }
   } catch (e) {
     console.log(e);
   }
-  let pageCount = Math.ceil(count / pageSize);
-  for (let i = 0; i < pageCount; i++) {
-    let builder = solrQuery('order');
-    let query = builder
-      .q('create_date', `[${startDateStr} TO ${endDateStr}]`)
-      .fq('coop_id', supplier.coopId)
-      .fq('status', 'SUCCESS')
-      .start(i * pageSize)
-      .build();
-    try {
-      let orderRows = (await execute(query)).rows;
-      orderRows.forEach((row) => {
-        countSum += Number(row.sum);
-        rows.push(getAccountRow(row));
-      })
-    } catch (e) {
-      console.log(e)
-    }
-  }
-  rows.unshift(`${count}|${countSum}|${supplier.balance == '-1' ? '*' : supplier.balance}`)
-
-  let fileName = `${outPath}\\${supplier.coopId}_${(new Date()).toFormat('YYYYMMDDHH24MISS')}.txt`;
-  console.log('save', fileName);
-  return {
-    success: fs.createWriteStream(fileName, {defaultEncoding: 'utf8'}).write(rows.join('\n')),
-    fileName
-  }
-}
+};
 
 /**
  * 把一条order对象转化为一条对账记录
@@ -79,28 +85,27 @@ let generateAccountBySupplier = async(supplier, dateStart, dateEnd) => {
  * @returns [String]       一条对账记录
  */
 let getAccountRow = (orderRow) => {
-  return (ACCOUNT_COLUMNS.map((item) => {
+  return ACCOUNT_COLUMNS.map((item) => {
     return item.endsWith('date') ? (new Date(orderRow[item])).toFormat('YYYYMMDDHH24MISSLL') : orderRow[item];
-  })).join('|')
+  })
 }
 
 /**
  * 获取一段时间内某一个商家的成功订单总数
  *
  * @param coopId[String]        商家编号
- * @param startDateStr[String]  起始时间的字符串
- * @param endDateStr[String]    结束时间的字符串
+ * @param range[String]         时间范围
  *
  * @returns [Promise]
  */
-let getCount = (coopId, startDateStr, endDateStr) => {
+let getCount = (coopId, range) => {
   return execute(
-    solrQuery('order')
-    .q('create_date', `[${startDateStr} TO ${endDateStr}]`)
-    .fq('coop_id', coopId)
-    .fq('status', 'SUCCESS')
-    .count(true)
-    .build()
+    solrQuery('orders')
+      .q('create_date', range)
+      .fq('coop_id', coopId)
+      .fq('status', 'SUCCESS')
+      .count(true)
+      .build()
   );
 }
 

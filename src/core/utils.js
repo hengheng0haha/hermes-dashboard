@@ -40,6 +40,13 @@ let getCards = async(supplier) => {
   return await tmp.json();
 };
 
+let getBillingCount = async(supplier, backend, month) => {
+  let tmp = await fetch('/billingCount', {
+    method: 'POST', headers: HEADERS_JSON, body: JSON.stringify({supplier, backend, month})
+  });
+  return await tmp.json();
+}
+
 let transformMoney = (s) => {
   if (s == '-1')  return "∞";
   if (/[^0-9\.]/.test(s)) return "invalid value";
@@ -63,5 +70,6 @@ export {
   getSuppliers,
   transformMoney,
   supplierCharge,
-  getCards
+  getCards,
+  getBillingCount
 };

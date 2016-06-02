@@ -51,6 +51,11 @@ let siderbar = [
         label: '运营商订单概况',
         link: '/backend_order_overview',
         className: 'am-icon-file'
+      },
+      {
+        label: '运营商月交易额',
+        link: '/backend_billing_month',
+        className: 'am-icon-file'
       }
     ]
   }
@@ -70,8 +75,7 @@ let ACCOUNT_COLUMNS = [
   'card_id',
   'customer',
   'create_date',
-  'finish_date',
-  'sum'
+  'finish_date'
 ];
 
 export {siderbar, hermesApi, HEADERS_JSON, ACCOUNT_COLUMNS}

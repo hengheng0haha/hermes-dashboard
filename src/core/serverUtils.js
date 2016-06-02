@@ -3,7 +3,10 @@
  */
 require('date-utils');
 import {execute, solrQuery} from './cassandra';
+import {hermesApi} from '../data/init';
 const FORMAT = 'YYYY-MM-DDTHH24:MI:SSZ';
+import fetch from 'node-fetch';
+import {types} from 'cassandra-driver';
 
 let getOrderChartByDate = async(date, params = {}) => {
   let query = solrQuery('orders')
@@ -46,6 +49,14 @@ let getOrderChartByDate = async(date, params = {}) => {
   }
 };
 
+/**
+ * 获取2个时间段的solr返回字符串([yyyy-MM-DDTHH:mm:ssZ TO yyyy-MM-DDTHH:mm:ssZ])
+ * Note: 2个时间点都包含在最后得到的时间段内
+ *
+ * @param date 起始时间
+ * @param end 结束时间
+ * @returns {*}
+ */
 let getDateRange = (date, end) => {
   let rst;
   if (!end) {
@@ -60,7 +71,42 @@ let getDateRange = (date, end) => {
   return rst;
 };
 
+let getBillingCountInMonth = async(query, suppliers, page = 1, pageSize = 300) => {
+  let result = types.BigDecimal.fromNumber(0);
+  query
+    .start((page - 1) * pageSize)
+    .limit(pageSize);
+  try {
+    let rst = (await execute(query.build())).rows;
+    rst.forEach((order) => {
+      console.log(order);
+      let tmp = suppliers[order.coop_id][order.card_id] || '0';
+      console.log(typeof tmp, tmp);
+      result = result.add(types.BigDecimal.fromString(tmp));
+    });
+    return result;
+  } catch (e) {
+    console.log(e);
+  }
+};
+
+let getCardsPriceBySupplier = async(supplier) => {
+  let tmp = await fetch(`${hermesApi}/do/supplier/get_supplier`, {
+      method: 'POST',
+      body: JSON.stringify({name: supplier})
+    }),
+    _supplier = await tmp.json();
+  let {priceMap} = JSON.parse(_supplier.result.value);
+  let CARDS = {};
+  Object.keys(priceMap).forEach((card) => {
+    CARDS[card] = priceMap[card].price;
+  });
+  return CARDS;
+};
+
 export {
   getOrderChartByDate,
-  getDateRange
+  getDateRange,
+  getBillingCountInMonth,
+  getCardsPriceBySupplier
 };

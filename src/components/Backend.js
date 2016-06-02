@@ -3,13 +3,14 @@
  */
 'use strict';
 
+require('date-utils');
 import React, {Component} from 'react';
 import ChartContainer from './ChartContainer';
 import Top from './Top';
 import Bar from './Bar';
 import Panel from './Panel';
-import {Selected} from 'amazeui-react';
-import {getAllBackend, getOrderCount} from '../core/utils';
+import {Selected, DateTimeInput} from 'amazeui-react';
+import {getAllBackend, getOrderCount, getBillingCount, transformMoney} from '../core/utils';
 
 class BackendManage extends Component {
   render() {
@@ -181,16 +182,8 @@ class BackendOrderOverview extends Component {
 
   async initBackendList() {
     let json = await getAllBackend({way: 'solr'});
-    console.log(json);
-    let backendNames = this.state.listBackend;
-    json.forEach((item) => {
-      backendNames.push({
-        value: item,
-        label: item
-      })
-    });
     let state = Object.assign({}, this.state, {
-      listBackend: backendNames
+      listBackend: getInitBackendList(json)
     });
     this.setState(state);
   }
@@ -211,7 +204,112 @@ class BackendOrderOverview extends Component {
   }
 }
 
+class BackendBillingCount extends Component {
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      listBackend: [],
+      selectedBackend: '',
+      month: Date.today().toFormat('YYYY-MM'),
+      sum: '0'
+    };
+
+    this.handleSelectBackend = this.handleSelectBackend.bind(this);
+    this.handleSelectDate = this.handleSelectDate.bind(this);
+    this.handleCount = this.handleCount.bind(this);
+    this.initBackendList = this.initBackendList.bind(this);
+  }
+
+  render() {
+    return (
+      <div className="am-u-sm-12">
+        <Top first="运营商" second="月交易额统计"/>
+        <Panel title="请选择一个运营商">
+          <div className="am-u-sm-12 am-u-md-3">
+            <Selected
+              ref="backend"
+              placeholder="请选择一个运营商"
+              data={this.state.listBackend}
+              value={this.state.selectedBackend}
+              onChange={(value) => {
+              this.handleSelectBackend(value);
+              }}
+            />
+          </div>
+          <div className="am-u-sm-12 am-u-md-3 ">
+            <DateTimeInput onSelect={this.handleSelectDate} dateTime={this.state.month} format="YYYY-MM" minViewMode="months" showTimePicker={false} viewMode="months" />
+          </div>
+          <div className="am-u-sm-12 am-u-md-3 am-u-end">
+            <button
+              id="load-btn"
+              type="button"
+              className="am-btn am-btn-success "
+              disabled={this.state.selectedBackend ? '' : 'disabled'}
+              onClick={this.handleCount}
+              data-am-loading="{loadingText: '努力加载中...'}"
+            >统计
+            </button>
+          </div>
+        </Panel>
+        <ul className="am-avg-sm-1 am-avg-md-1 am-padding am-text-center admin-content-list ">
+          <li style={{fontSize: '4em'}}>
+            {`￥${transformMoney(this.state.sum)}`}
+          </li>
+        </ul>
+      </div>
+    );
+  }
+
+  handleSelectDate(time) {
+    console.log(time);
+    this.setState(Object.assign({}, this.state, {
+      month: time
+    }));
+  }
+
+  componentDidMount() {
+    this.initBackendList();
+  }
+
+  handleSelectBackend(value) {
+    let state = Object.assign({}, this.state, {
+      selectedBackend: value
+    });
+    this.setState(state);
+  }
+
+  async handleCount() {
+    $('#load-btn').button('loading');
+    let result = await getBillingCount(this.state.selectedSupplier, this.state.selectedBackend, this.state.month);
+    $('#load-btn').button('reset');
+    this.setState(Object.assign({}, this.state, {
+      sum: result.sum
+    }));
+  }
+
+  async initBackendList() {
+    let json = await getAllBackend({way: 'solr', all: true});
+    let state = Object.assign({}, this.state, {
+      listBackend: getInitBackendList(json)
+    });
+    this.setState(state);
+  }
+}
+
+let getInitBackendList = (json) => {
+  let backendNames = [];
+  json.forEach((item) => {
+    backendNames.push({
+      value: item,
+      label: item.toLowerCase()
+    })
+  });
+  return backendNames;
+}
+
 export {
   BackendManage,
-  BackendOrderOverview
+  BackendOrderOverview,
+  BackendBillingCount
 };

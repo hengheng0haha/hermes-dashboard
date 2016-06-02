@@ -16,12 +16,14 @@ import bodyParser from 'body-parser';
 import PrettyError from 'pretty-error';
 import assets from './assets'; // eslint-disable-line import/no-unresolved
 import {port} from './config';
-import {getOrderChartByDate, getDateRange} from './core/serverUtils';
+import {getOrderChartByDate, getDateRange, getBillingCountInMonth} from './core/serverUtils';
 import {hermesApi, HEADERS_JSON} from './data/init';
 import {execute, solrQuery} from './core/cassandra';
 import fetch from 'node-fetch';
+import {types} from 'cassandra-driver';
 
 const app = express();
+const FORMAT = 'YYYY-MM-DDTHH24:MI:SSZ';
 
 //
 // Tell any CSS tooling (such as Material UI) to use all vendor prefixes if the
@@ -45,9 +47,10 @@ app.post('/orders', async(req, res, next) => {
   try {
     let query = solrQuery('orders').count(true);
     let {startDate, endDate} = req.body.date;
+    console.log(startDate, endDate);
     if (startDate || endDate) {
-      let start = startDate ? `${startDate}T00:00:00Z` : '*';
-      let end = endDate ? `${endDate}T00:00:00Z` : '*';
+      let start = startDate ? `${new Date(startDate).addHours(-16).toFormat(FORMAT)}` : '*';
+      let end = endDate ? `${new Date(endDate).addHours(-16).toFormat(FORMAT)}` : '*';
       query.q('create_date', `[${start} TO ${end}]`)
     }
     Object.keys(req.body.option).forEach((key) => {
@@ -64,6 +67,7 @@ app.post('/orders', async(req, res, next) => {
         }
       }
     });
+    console.log(query.build());
     let count = (await execute(query.build())).rows[0].count;
 
     query.count(false)
@@ -99,17 +103,18 @@ app.post('/orderCounter', async(req, res, next) => {
 });
 
 app.post('/listBackend', async(req, res, next) => {
-  let way = req.body.way;
+  let {way, all} = req.body;
   let results = [];
   try {
     if (way == 'solr') {
       let query = solrQuery('orders')
-          .q('create_date', getDateRange(Date.today().add({days: -7}), Date.today()))
-          .facet({
-            field: 'to_platform'
-          })
-          .build(),
-        result = (await execute(query)).rows[0].facet_fields;
+        .facet({
+          field: 'to_platform'
+        });
+      if (!all) {
+        query.q('create_date', getDateRange(Date.today().add({days: -7}), Date.today()))
+      }
+      let result = (await execute(query.build())).rows[0].facet_fields;
       let tmp = JSON.parse(result).to_platform;
       Object.keys(tmp).forEach((item) => {
         if (tmp[item] != 0) {
@@ -204,6 +209,57 @@ app.post('/listCards', async(req, res) => {
   }
   res.send({code: 1});
 
+});
+
+app.post('/billingCount', async(req, res) => {
+  let {backend, month} = req.body,
+    pageSize = 300,
+    suppliers = {};
+  let result = {backend};
+  try {
+    let tmp = await fetch(`${hermesApi}/do/supplier/get_supplier`, {
+        method: 'POST',
+        body: JSON.stringify({all: true})
+      }),
+      _suppliers = JSON.parse((await tmp.json()).result.value);
+    _suppliers.forEach((item) => {
+      let cards = {};
+      Object.keys(item.priceMap).forEach((card) => {
+        cards[card] = String(item.priceMap[card].price);
+      });
+      suppliers[item.coopId] = cards;
+    });
+
+    const FORMAT = "YYYY-MM-DDTHH24:MI:SSZ";
+    let start = new Date(month).add({days: -1}).addHours(8).toFormat(FORMAT),
+      end = new Date(month).addMonths(1).add({days: -1}).addHours(8).toFormat(FORMAT);
+    let query = solrQuery('orders').q("create_date", `[${start} TO ${end}]`)
+      .fq('status', 'SUCCESS')
+      .fq("to_platform", backend);
+    let count = (await execute(query.count(true).build())).rows[0].count;
+
+    let promises = [];
+    query.count(false);
+    for (let i = 1; i <= Math.ceil(count / pageSize); i++) {
+      promises.push(getBillingCountInMonth(query, suppliers, i, pageSize));
+    }
+
+    let startTime = new Date().getTime();
+    let allSum = await Promise.all(promises);
+    let sum = types.BigDecimal.fromNumber(0);
+    allSum.forEach((item) => {
+      sum = sum.add(item);
+    });
+    let took = `${new Date().getTime() - startTime}ms`;
+
+    Object.assign(result, {
+      sum,
+      took
+    });
+  } catch (e) {
+    console.log(e);
+  }
+  res.send(result);
 });
 
 //

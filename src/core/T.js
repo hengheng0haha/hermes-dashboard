@@ -3,9 +3,16 @@
  */
 
 'use strict';
-
+require('date-utils');
 import {SupplierFactory, SupplierPriceFactory} from './supplier';
+import {getDateRange, getBillingCountInMonth} from './serverUtils';
+import generate from './account';
 
+// (async () => {
+//   let {sums, cards} = await getBillingCountInMonth('1970004461', 'UNICOM_NAT_CQY', '2016-05');
+//   console.log(sums);
+//   console.log(cards);
+// })();
 
 // (async function () {
 //     // let result = await SupplierFactory('test', 'tmall', '测试账号');
@@ -13,7 +20,10 @@ import {SupplierFactory, SupplierPriceFactory} from './supplier';
 //     console.log(JSON.stringify(result))
 // })();
 
-// SupplierPriceFactory('test', {'UFDBG00200': {price: '1'}})
+// todo 生产环境产品配置, 改cassandra ip
+// SupplierPriceFactory('test', {
+//   'UFFJM00020': {price: 1}
+// })
 //   .then((result) => {
 //     return result.json();
 //   })
@@ -21,16 +31,6 @@ import {SupplierFactory, SupplierPriceFactory} from './supplier';
 //     console.log(json)
 //   });
 
-// console.log(
-//     (async function(){
-//         await '....!!!!'
-//     })()
-// )
-
-let param = {
-  a: 'a',
-  b: 'b'
-};
-for ([k, v] in param) {
-  console.log(k, v);
-}
+(async()=> {
+  console.log(await generate(Date.yesterday()));
+})();

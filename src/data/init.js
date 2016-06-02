@@ -26,11 +26,6 @@ let siderbar = [
     id: 'supplier',
     children: [
       {
-        label: '商家管理',
-        link: '/supplier',
-        className: 'am-icon-file'
-      },
-      {
         label: '商家产品',
         link: '/supplier_product',
         className: 'am-icon-file'

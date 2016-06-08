@@ -5,7 +5,7 @@
 const DEBUG = true;
 
 const hermes = {
-  host: DEBUG ? '172.16.10.20' : '172.16.10.30',
+  host: DEBUG ? '172.16.10.20' : '172.16.10.60',
   port: '8080'
 };
 

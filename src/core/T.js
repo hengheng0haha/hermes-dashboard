@@ -21,16 +21,33 @@ import generate from './account';
 // })();
 
 // todo 生产环境产品配置, 改cassandra ip
-// SupplierPriceFactory('test', {
-//   'UFFJM00020': {price: 1}
-// })
-//   .then((result) => {
-//     return result.json();
-//   })
-//   .then((json) => {
-//     console.log(json)
-//   });
+SupplierPriceFactory('zx', {
+  "UFJXG00020X": {price:'0.8'},
+  "UFJXG00030X": {price:'1.2'},
+  "UFJXG00050X": {price:'2'},
+  "UFJXG00100X": {price:'4'},
+  "UFJXG00200X": {price:'8'},
+  "UFJXG00300X": {price:'12'},
+  "UFJXG00500X": {price:'20'},
+  "UFJXG01000X": {price:'40'},
+  "UFJXG02000X": {price:'80'},
+  "UFJXG00020": {price:'1.12'},
+  "UFJXG00030": {price:'1.68'},
+  "UFJXG00050": {price:'2.8'},
+  "UFJXG00100": {price:'5.6'},
+  "UFJXG00200": {price:'11.2'},
+  "UFJXG00300": {price:'16.8'},
+  "UFJXG00500": {price:'28'},
+  "UFJXG01000": {price:'56'},
+  "UFJXG02000": {price:'112'}
+})
+  .then((result) => {
+    return result.json();
+  })
+  .then((json) => {
+    console.log(json)
+  });
 
-(async()=> {
-  console.log(await generate(Date.yesterday()));
-})();
+// (async()=> {
+//   console.log(await generate(Date.yesterday()));
+// })();

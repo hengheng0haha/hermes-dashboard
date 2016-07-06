@@ -3,7 +3,6 @@
  */
 'use strict';
 
-require('date-utils');
 import React, {Component} from 'react';
 
 class Panel extends Component {

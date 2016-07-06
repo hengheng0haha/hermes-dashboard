@@ -9,10 +9,8 @@
 
 import React from 'react';
 import Main from '../components/Main';
-import Overview from '../components/Overview';
 import {OrderQuery} from '../components/order';
-import {SupplierBilling, SupplierManage, SupplierProducts} from '../components/supplier';
-import {BackendOrderOverview, BackendBillingCount} from '../components/backend';
+import {SupplierBilling, SupplierManage, SupplierProducts, SupplierAccount} from '../components/supplier';
 import {Router, Route, browserHistory, IndexRoute} from 'react-router';
 
 
@@ -37,6 +35,7 @@ export default {
           <IndexRoute component={{container: SupplierBilling}}/>
           <Route path="query" component={{container: OrderQuery}}/>
           <Route path="supplier_product" component={{container: SupplierProducts}}/>
+          <Route path="supplier_account" component={{container: SupplierAccount}}/>
         </Route>
       </Router>
     );

@@ -1,12 +1,15 @@
 /**
  * Created by Baxter on 2016/5/28.
  */
-require('date-utils');
 import {execute, solrQuery} from './cassandra';
 import {hermesApi} from '../data/init';
-const FORMAT = 'YYYY-MM-DDTHH24:MI:SSZ';
 import fetch from 'node-fetch';
 import {types} from 'cassandra-driver';
+import {info} from './account.js';
+import moment from 'moment-timezone';
+
+const FORMAT = 'YYYY-MM-DDTHH24:MI:SSZ';
+
 
 let getOrderChartByDate = async(date, params = {}) => {
   let query = solrQuery('orders')
@@ -29,7 +32,7 @@ let getOrderChartByDate = async(date, params = {}) => {
     if (status.failed == 0) {
       tmp['failed'] = 0;
       tmp['error'] = 0;
-      rst[date.toYMD('-')] = tmp;
+      rst[moment(date).format('YYYY-MM-DD')] = tmp;
     } else {
       let errorQuery = solrQuery('orders')
         .q('create_date', getDateRange(date))
@@ -41,7 +44,7 @@ let getOrderChartByDate = async(date, params = {}) => {
       let error = (await execute(errorQuery.build())).rows[0].count;
       tmp['failed'] = status.failed - error;
       tmp['error'] = error;
-      rst[date.toYMD('-')] = tmp;
+      rst[moment(date).format('YYYY-MM-DD')] = tmp;
     }
     return rst;
   } catch (e) {
@@ -58,17 +61,7 @@ let getOrderChartByDate = async(date, params = {}) => {
  * @returns {*}
  */
 let getDateRange = (date, end) => {
-  let rst;
-  if (!end) {
-    rst = `[${date.addHours(-8).toFormat(FORMAT)} TO ${date.add({days: 1}).toFormat(FORMAT)}]`;
-  } else {
-    date.addHours(24);
-    end.addHours(24);
-    rst = `[${date.addHours(-8).toFormat(FORMAT)} TO ${end.addHours(-8).toFormat(FORMAT)}]`;
-    end.addHours(-16);
-  }
-  date.addHours(-16);
-  return rst;
+  return `[${moment(date).utc().format()} TO ${end ? moment(end).utc().format() : moment(date).add(1, 'days').utc().format()}]`;
 };
 
 let getBillingCountInMonth = async(query, suppliers, page = 1, pageSize = 300) => {

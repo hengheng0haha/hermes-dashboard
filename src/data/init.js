@@ -29,6 +29,11 @@ let siderbar = [
         label: '商家产品',
         link: '/supplier_product',
         className: 'am-icon-file'
+      },
+      {
+        label: '商家对账',
+        link: '/supplier_account',
+        className: 'am-icon-file'
       }
     ]
   }
@@ -42,6 +47,13 @@ let HEADERS_JSON = {
   'Content-Type': 'application/json'
 };
 
+let HEADERS_DOWNLOAD = {
+  "content": "text/html;charset=utf-8",
+  "Content-Type": "application/octet-stream",
+  "Expires": "0",
+  "Cache-Control": "must-revalidate, post-check=0, pre-check=0"
+};
+
 let ACCOUNT_COLUMNS = [
   'tb_order_id',
   'inner_order_id',
@@ -51,4 +63,4 @@ let ACCOUNT_COLUMNS = [
   'finish_date'
 ];
 
-export {siderbar, hermesApi, HEADERS_JSON, ACCOUNT_COLUMNS}
+export {siderbar, hermesApi, HEADERS_JSON, ACCOUNT_COLUMNS, HEADERS_DOWNLOAD}

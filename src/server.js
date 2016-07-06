@@ -7,7 +7,8 @@
  * LICENSE.txt file in the root directory of this source tree.
  */
 
-require('date-utils');
+import schedule from 'node-schedule'
+import moment from 'moment-timezone';
 import 'babel-polyfill';
 import path from 'path';
 import express from 'express';
@@ -17,13 +18,14 @@ import PrettyError from 'pretty-error';
 import assets from './assets'; // eslint-disable-line import/no-unresolved
 import {port} from './config';
 import {getOrderChartByDate, getDateRange, getBillingCountInMonth} from './core/serverUtils';
+import {generate, info, outPath} from './core/account';
 import {hermesApi, HEADERS_JSON} from './data/init';
 import {execute, solrQuery} from './core/cassandra';
 import fetch from 'node-fetch';
 import {types} from 'cassandra-driver';
+import {SUPPLIER} from './data/dashboard.config';
 
 const app = express();
-const FORMAT = 'YYYY-MM-DDTHH24:MI:SSZ';
 
 //
 // Tell any CSS tooling (such as Material UI) to use all vendor prefixes if the
@@ -49,13 +51,16 @@ app.post('/orders', async(req, res, next) => {
     let {startDate, endDate} = req.body.date;
     console.log(startDate, endDate);
     if (startDate || endDate) {
-      let start = startDate ? `${new Date(startDate).addHours(-16).toFormat(FORMAT)}` : '*';
-      let end = endDate ? `${new Date(endDate).addHours(-16).toFormat(FORMAT)}` : '*';
+      let start = startDate ? `${moment(startDate).utc().format()}` : '*';
+      let end = endDate ? `${moment(endDate).utc().format()}` : '*';
       query.q('create_date', `[${start} TO ${end}]`)
     }
     Object.keys(req.body.option).forEach((key) => {
       let value = req.body.option[key];
       if (value) {
+        if (key === 'type') {
+          return;
+        }
         if (key == 'text') {
           query.fq(value.type, value.content)
         } else if (key == 'sort') {
@@ -91,10 +96,10 @@ app.post('/orderCounter', async(req, res, next) => {
     Object.assign(result, today);
     if (body.init) {
       for (let i = -1; i > -7; i--) {
-        Object.assign(result, (await getOrderChartByDate(Date.today().add({days: i}), body.param || {})));
+        Object.assign(result, (await getOrderChartByDate(moment.startOf('day').add(i, 'days').format(), body.param || {})));
       }
-    } else if (body.prevDate && body.prevDate !== (new Date()).toYMD('-')) {
-      Object.assign(result, (await getOrderChartByDate(Date.today().add({days: -1}), body.param || {})));
+    } else if (body.prevDate && body.prevDate !== moment(new Date()).format('YYYY-MM-DD')) {
+      Object.assign(result, (await getOrderChartByDate(moment.startOf('day').subtract(1, 'days'), body.param || {})));
     }
   } catch (e) {
     console.log(e);
@@ -112,7 +117,7 @@ app.post('/listBackend', async(req, res, next) => {
           field: 'to_platform'
         });
       if (!all) {
-        query.q('create_date', getDateRange(Date.today().add({days: -7}), Date.today()))
+        query.q('create_date', getDateRange(moment().startOf('day').substract(7, 'days').format(), moment().startOf('day').format()))
       }
       let result = (await execute(query.build())).rows[0].facet_fields;
       let tmp = JSON.parse(result).to_platform;
@@ -230,9 +235,8 @@ app.post('/billingCount', async(req, res) => {
       suppliers[item.coopId] = cards;
     });
 
-    const FORMAT = "YYYY-MM-DDTHH24:MI:SSZ";
-    let start = new Date(month).add({days: -1}).addHours(8).toFormat(FORMAT),
-      end = new Date(month).addMonths(1).add({days: -1}).addHours(8).toFormat(FORMAT);
+    let start = moment(month).utc().format(),
+      end = moment(month).add(1, 'months').utc().format();
     let query = solrQuery('orders').q("create_date", `[${start} TO ${end}]`)
       .fq('status', 'SUCCESS')
       .fq("to_platform", backend);
@@ -244,13 +248,13 @@ app.post('/billingCount', async(req, res) => {
       promises.push(getBillingCountInMonth(query, suppliers, i, pageSize));
     }
 
-    let startTime = new Date().getTime();
+    let startTime = Date.now();
     let allSum = await Promise.all(promises);
     let sum = types.BigDecimal.fromNumber(0);
     allSum.forEach((item) => {
       sum = sum.add(item);
     });
-    let took = `${new Date().getTime() - startTime}ms`;
+    let took = `${Date.now() - startTime}ms`;
 
     Object.assign(result, {
       sum,
@@ -260,6 +264,35 @@ app.post('/billingCount', async(req, res) => {
     console.log(e);
   }
   res.send(result);
+});
+
+app.post('/account', async(req, res) => {
+  let {operation, date, supplier} = req.body;
+  let json = await fetch(`${hermesApi}/do/supplier/get_supplier`, {
+    method: 'POST',
+    body: JSON.stringify({name: supplier})
+  });
+  let supplierEntity = JSON.parse((await json.json()).result.value);
+  console.log(supplierEntity);
+  if (operation === 'info') {
+    res.send(JSON.stringify(Object.assign({}, info(date, supplierEntity.coopId), {code: 0})));
+  } else if (operation === 'create') {
+    let result = await generate(date, null, supplierEntity);
+    console.log(info(date, supplierEntity.coopId));
+    if (result.success) {
+      res.send(JSON.stringify(Object.assign({}, info(date, supplierEntity.coopId), {code: 0})));
+    } else {
+      res.send(JSON.stringify({code: 1, err: 'create file error'}))
+    }
+  } else {
+    res.send(JSON.stringify({code: 1, err: 'invalid operation'}))
+  }
+});
+
+app.get('/download/:fileName', (req, res) => {
+  let fileName = req.params.fileName;
+  console.log(`${outPath}${fileName}`);
+  res.download(`${outPath}${fileName}`);
 });
 
 //
@@ -301,5 +334,14 @@ app.use((err, req, res, next) => { // eslint-disable-line no-unused-vars
 /* eslint-disable no-console */
 app.listen(port, () => {
   console.log(`The server is running at http://localhost:${port}/`);
+});
+schedule.scheduleJob('0 0 1 * * *', async() => {
+  let json = await fetch(`${hermesApi}/do/supplier/get_supplier`, {
+    method: 'POST',
+    body: JSON.stringify({name: SUPPLIER})
+  });
+  let supplierEntity = JSON.parse((await json.json()).result.value);
+  console.log('create account file', moment().startOf('day').add(-1, 'days').format(), supplierEntity.supplierName);
+  generate(moment().startOf('day').add(-1, 'days').format(), null, supplierEntity);
 });
 /* eslint-enable no-console */

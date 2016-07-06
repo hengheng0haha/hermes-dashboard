@@ -3,6 +3,7 @@
  */
 'use strict';
 
+import moment from 'moment-timezone';
 import React, {Component} from 'react';
 import ReactDOM from 'react-dom';
 import Top from './Top'
@@ -113,8 +114,11 @@ class OrderQuery extends Component {
         </Panel>
         <Table
           names={{
+          tb_order_id: '商家订单号',
           inner_order_id: '内部订单号',
+          sum: '订单金额',
           customer: '手机号码',
+          tb_order_snap: '订单快照',
           create_date: '订单时间',
           status: '状态',
           _operation: '操作'
@@ -272,7 +276,8 @@ class OrderQuery extends Component {
         status,
         to_platform,
         sort,
-        text
+        text,
+        type
       },
       date: {
         startDate: start,
@@ -288,7 +293,8 @@ class OrderQuery extends Component {
         to_platform: body.option.to_platform,
         sort: body.option.sort,
         startDate: body.date.startDate,
-        endDate: body.date.endDate
+        endDate: body.date.endDate,
+        type: body.option.type
       } || {
         status: '',
         to_platform: '',
@@ -367,7 +373,7 @@ class OrderDetail extends Component {
           });
           items.push(messages);
         } else if (col.endsWith('date')) {
-          items.push(this.getDetailItem(DetailKeyMapping[col], new Date(value).toFormat('YYYY-MM-DD HH24:MI:SS')));
+          items.push(this.getDetailItem(DetailKeyMapping[col], moment(value).format('YYYY-MM-DD HH:mm:ss')));
         } else {
           items.push(this.getDetailItem(DetailKeyMapping[col], value.toString()));
         }

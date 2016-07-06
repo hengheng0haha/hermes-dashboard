@@ -1,6 +1,6 @@
 'use strict';
 
-require('date-utils');
+import moment from 'moment-timezone';
 import React, {Component} from 'react';
 
 class Table extends Component {
@@ -86,10 +86,12 @@ class TableRow extends React.Component {
       <tr>
         {this.props.show.map((item) => {
           let cell = new Date(data[item]);
-          if (typeof data[item] == 'number' || cell == 'Invalid Date') {
-            cell = data[item];
+          let str = String(data[item]);
+          let rst = str.match(/([0-9]{3}[1-9]|[0-9]{2}[1-9][0-9]{1}|[0-9]{1}[1-9][0-9]{2}|[1-9][0-9]{3})-(((0[13578]|1[02])-(0[1-9]|[12][0-9]|3[01]))|((0[469]|11)-(0[1-9]|[12][0-9]|30))|(02-(0[1-9]|[1][0-9]|2[0-8])))/);
+          if (rst) {
+            cell = moment(cell).format('YYYY-MM-DD HH:mm:SS');
           } else {
-            cell = cell.toFormat('YYYY-MM-DD HH24:MI:SS');
+            cell = data[item];
           }
           return (
             <td>{cell}</td>);

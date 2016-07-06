@@ -1,8 +1,7 @@
 /**
  * Created by Baxter on 2016/5/20.
  */
-require('date-utils');
-import {HEADERS_JSON, hermesApi} from '../data/init';
+import {HEADERS_JSON, HEADERS_DOWNLOAD} from '../data/init';
 
 let getAllBackend = async(params = {}) => {
   let tmp = await fetch('/listBackend', {
@@ -45,6 +44,21 @@ let getBillingCount = async(supplier, backend, month) => {
     method: 'POST', headers: HEADERS_JSON, body: JSON.stringify({supplier, backend, month})
   });
   return await tmp.json();
+};
+
+let doAccount = async(date, supplier, operation) => {
+  let tmp = await fetch('/account', {
+    method: 'POST', headers: HEADERS_JSON, body: JSON.stringify({
+      date,
+      supplier,
+      operation: operation
+    })
+  });
+  return await tmp.json();
+};
+
+let downloadAccount = async(fileName) => {
+  fetch(`/download/${fileName}`, {method: 'GET', headers: HEADERS_DOWNLOAD});
 }
 
 let transformMoney = (s) => {
@@ -71,5 +85,7 @@ export {
   transformMoney,
   supplierCharge,
   getCards,
-  getBillingCount
+  getBillingCount,
+  doAccount,
+  downloadAccount
 };

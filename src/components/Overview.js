@@ -1,6 +1,6 @@
 'use strict'
 
-require('date-utils');
+import moment from 'moment-timezone';
 import React, {Component} from 'react'
 import Top from './Top'
 import Graph from './Graph'
@@ -181,7 +181,7 @@ class Overview extends Component {
           }
         ];
         Object.keys(json).reverse().forEach((date) => {
-          if (date == Date.today().toYMD('-')) {
+          if (date == moment().startOf('day').format('YYYY-MM-DD')) {
             let overviewState = Object.assign(
               {},
               this.refs.order_overview.state,
@@ -232,7 +232,7 @@ class Overview extends Component {
           return result.json();
         })
         .then((json) => {
-          let overviewDate = Date.today().toYMD('-');
+          let overviewDate = moment().startOf('day').format('YYYY-MM-DD');
           let overviewState = Object.assign(
             {},
             this.refs.order_overview.state,

@@ -3,7 +3,7 @@
  */
 
 const DEBUG = true;
-const SUPPLIER = 'npn';
+const SUPPLIER = 'test';
 
 const hermes = {
   host: DEBUG ? '172.16.10.20' : '172.16.10.60',

@@ -3,7 +3,7 @@
  */
 'use strict';
 
-require('date-utils');
+import moment from 'moment-timezone';
 import React, {Component} from 'react';
 import ChartContainer from './ChartContainer';
 import Top from './Top';
@@ -211,7 +211,7 @@ class BackendBillingCount extends Component {
     this.state = {
       listBackend: [],
       selectedBackend: '',
-      month: Date.today().toFormat('YYYY-MM'),
+      month: moment().format('YYYY-MM'),
       sum: '0'
     };
 
@@ -238,7 +238,8 @@ class BackendBillingCount extends Component {
             />
           </div>
           <div className="am-u-sm-12 am-u-md-3 ">
-            <DateTimeInput onSelect={this.handleSelectDate} dateTime={this.state.month} format="YYYY-MM" minViewMode="months" showTimePicker={false} viewMode="months" />
+            <DateTimeInput onSelect={this.handleSelectDate} dateTime={this.state.month} format="YYYY-MM"
+                           minViewMode="months" showTimePicker={false} viewMode="months"/>
           </div>
           <div className="am-u-sm-12 am-u-md-3 am-u-end">
             <button
